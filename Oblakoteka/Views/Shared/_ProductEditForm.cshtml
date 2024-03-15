@@ -1,0 +1,22 @@
+﻿@model Oblakoteka.ProductViewModel
+
+@using (Html.BeginForm("EditModal", "Product", FormMethod.Post, new { id = "editProductForm" }))
+{
+    @Html.HiddenFor(model => model.ID)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Name)
+        @Html.TextBoxFor(model => model.Name, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.Name)
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Description)
+        @Html.TextAreaFor(model => model.Description, new { @class = "form-control" })
+        @Html.ValidationMessageFor(model => model.Description)
+    </div>
+
+    <!-- Другие поля продукта -->
+
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+}

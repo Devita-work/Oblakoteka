@@ -1,0 +1,150 @@
+﻿@model List<ProductViewModel>
+
+<form>
+    @Html.AntiForgeryToken()
+</form>
+
+<h1>Список изделий</h1>
+
+<form asp-controller="Product" asp-action="Index" method="get">
+    <input type="text" name="filter" placeholder="Фильтр по наименованию">
+    <button type="submit">Применить фильтр</button>
+</form>
+
+@if (Model.Any())
+{
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Наименование</th>
+                <th>Описание</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model)
+            {
+                <tr>
+                    <td>@product.ID</td>
+                    <td>@product.Name</td>
+                    <td>@product.Description</td>
+                    <td>
+                        <a href="#" class="editProductModalLink" data-toggle="modal" data-url="@Url.Action("EditModal", "Product", new { id = @product.ID })" data-target="#editProductModal" data-id="@product.ID" data-name="@product.Name" data-description="@product.Description">Редактировать</a>
+                    </td>
+                    <td>
+                    <td>
+                        <a href="#" class="deleteProductLink" data-id="@product.ID">Удалить</a>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>Нет доступных изделий.</p>
+}
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addProductModal">
+    Добавить
+</button>
+
+<div class="modal" id="addProductModal" tabindex="-1" role="dialog" aria-labelledby="addProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addProductModalLabel">Добавить новый товар</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Форма для добавления нового товара будет загружена здесь через AJAX -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editProductModal" tabindex="-1" role="dialog" aria-labelledby="editProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editProductModalLabel">Редактировать продукт</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Здесь будет загружаться форма редактирования продукта -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Скрипт для загрузки формы добавления нового товара через AJAX -->
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        const elemModal = document.querySelector('.modal');
+        console.log("Modal is opening");
+
+        $(document).ready(function () {
+            console.log("Document is ready");
+
+            $(document).on('show.bs.modal', function (e) {
+                console.log("Modal is opening");
+                var modal = $(this);
+                jQuery.ajax({
+                    url: '/Product/Add',
+                    method: 'GET',
+                    success: function (data) {
+                        $('.modal-body').html(data);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error("Error loading content:", error);
+                    }
+                });
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            $('.editProductModalLink').click(function () {
+                var url = $(this).data('url');
+                $.get(url, function (data) {
+                    $('#editProductModal .modal-body').html(data);
+                });
+            });
+        });
+    </script>
+    <script>
+        $(function () {
+            $('.deleteProductLink').click(function () {
+                var productId = $(this).data('id').toUpperCase();
+                if (confirm('Вы уверены, что хотите удалить этот продукт?')) {
+                    // Получаем токен CSRF из мета-тега
+                    var token = $('input[name="__RequestVerificationToken"]').val();
+                    $.ajax({
+                        url: '/Product/Delete?id=' + productId,
+                        type: 'DELETE',
+                        headers: {
+                            // Устанавливаем заголовок запроса для передачи токена CSRF
+                            'RequestVerificationToken': token
+                        },
+                        success: function (response) {
+                            // Обновляем страницу после успешного удаления
+                            location.reload();
+                        },
+                        error: function (xhr, status, error) {
+                            console.error('Error:', error);
+                            alert('При удалении продукта произошла ошибка.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
